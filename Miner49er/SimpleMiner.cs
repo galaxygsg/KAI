@@ -29,11 +29,9 @@ namespace Miner49er
             miningState = MakeNewState("Mining");
             drinkingState = MakeNewState("Drinking");
             bankingState = MakeNewState("Banking");
-
-            // --------------------
+            
             // Mining transitions
-            // --------------------
-            // If thirsty enough, go drink (Option A threshold)
+            // If thirsty enough, go drink 
             miningState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.parched) },
                 new ActionDelegate[] { }, drinkingState);
@@ -47,10 +45,8 @@ namespace Miner49er
             miningState.addTransition("tick",
                 new ConditionDelegate[] { },
                 new ActionDelegate[] { new ActionDelegate(this.dig) }, miningState);
-
-            // --------------------
+            
             // Drinking transitions
-            // --------------------
             // Keep drinking until thirst reaches 0
             drinkingState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.thirsty) },
@@ -60,10 +56,8 @@ namespace Miner49er
             drinkingState.addTransition("tick",
                 new ConditionDelegate[] { },
                 new ActionDelegate[] { }, miningState);
-
-            // --------------------
+            
             // Banking transitions
-            // --------------------
             // Deposit all gold one nugget per tick
             bankingState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.pocketsNotEmpty) },
@@ -83,7 +77,6 @@ namespace Miner49er
         }
 
         /// <summary>
-        /// Option A: preemptive hydration.
         /// Trigger drinking before the hard stop at 15.
         /// </summary>
         private Boolean parched(FSA fsa)
@@ -134,7 +127,8 @@ namespace Miner49er
 
         private Boolean pocketsFull(FSA fsa) => gold >= 5;
         private Boolean pocketsNotEmpty(FSA fsa) => gold > 0;
-        private Boolean thirsty(FSA fsa) => thirst > 0;
+        private Boolean thirsty(FSA fsa) => thirst > 2;
+
 
         public void printStatus()
         {
