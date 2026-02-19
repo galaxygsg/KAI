@@ -11,7 +11,7 @@ The change to a thirst level of 12 is a deliberate one. A threshold of 10 would 
 A threshold of 14 wouldn't be marginally different from 15 meaning it wouldn't really alter the miner's behavior. Twelve provides a balance between output and stability (difference of 3). 
 The miner now operates within a certain level of performance, thereby resulting in a stable and efficient state machine operation.
 
-In addition, I implemented a second refinement to reduce unnecessary downtime in the Drinking state. 
+In addition, I implemented a reduction of unnecessary downtime in the Drinking state. 
 Originally, the miner continued drinking until thirst reached 0. This resulted in extended periods where no gold was being mined or deposited. 
 I modified the drinking condition so that the miner now stops drinking once thirst drops to 2. 
 This allows the miner to reduce thirst to a safe level while returning to productive work sooner. 
