@@ -4,83 +4,99 @@ using KAI.FSA; // Use the namespace from your FSAImpl definition
 namespace Miner49er
 {
     /// <summary>
-    /// This class implements the Miner as described by the first state transition table
+    /// This class implements the Miner using a simple 3-state FSA:
+    /// Mining -> Banking -> Drinking
+    /// Option A change: drink earlier (preemptive hydration).
     /// </summary>
     public class SimpleMiner : FSAImpl, Miner
     {
-        /// Amount of gold nuggest in the miner's pockets ...
+        /// Amount of gold nuggets in the miner's pockets
         public int gold = 0;
-        /// How thirsty the miner is ...
+
+        /// How thirsty the miner is
         public int thirst = 0;
-        /// How many gold nuggets the miner has in the bank ...
+
+        /// How many gold nuggets the miner has in the bank
         public int bank = 0;
 
-        // The following variables are each oen of the defiend states the miner cna be in.
+        // States
         State miningState;
         State drinkingState;
         State bankingState;
 
-        // FIXED: Added : base("SimpleMiner") to resolve the FSAImpl constructor error
         public SimpleMiner() : base("SimpleMiner")
         {
-            // FIXED: Using PascalCase to match your FSAImpl.MakeNewState method
             miningState = MakeNewState("Mining");
             drinkingState = MakeNewState("Drinking");
             bankingState = MakeNewState("Banking");
 
-            // set mining transitions
+            // --------------------
+            // Mining transitions
+            // --------------------
+            // If thirsty enough, go drink (Option A threshold)
             miningState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.parched) },
-                new ActionDelegate[] { new ActionDelegate(this.incrementThirst) }, drinkingState);
-            
+                new ActionDelegate[] { }, drinkingState);
+
+            // If pockets are full, go to bank
             miningState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.pocketsFull) },
-                new ActionDelegate[] { new ActionDelegate(this.incrementThirst) }, bankingState);
-            
+                new ActionDelegate[] { }, bankingState);
+
+            // Otherwise, dig
             miningState.addTransition("tick",
-                new ConditionDelegate[] { }, 
+                new ConditionDelegate[] { },
                 new ActionDelegate[] { new ActionDelegate(this.dig) }, miningState);
 
-            // set drinking transitions
+            // --------------------
+            // Drinking transitions
+            // --------------------
+            // Keep drinking until thirst reaches 0
             drinkingState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.thirsty) },
                 new ActionDelegate[] { new ActionDelegate(this.takeDrink) }, drinkingState);
-            
+
+            // If no longer thirsty, go back to mining
             drinkingState.addTransition("tick",
                 new ConditionDelegate[] { },
-                new ActionDelegate[] { new ActionDelegate(this.incrementThirst) }, miningState);
+                new ActionDelegate[] { }, miningState);
 
-            // set banking transitions
+            // --------------------
+            // Banking transitions
+            // --------------------
+            // Deposit all gold one nugget per tick
             bankingState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.pocketsNotEmpty) },
                 new ActionDelegate[] { new ActionDelegate(this.depositGold) }, bankingState);
 
+            // If thirsty, go drink
             bankingState.addTransition("tick",
                 new ConditionDelegate[] { new ConditionDelegate(this.parched) },
                 new ActionDelegate[] { }, drinkingState);
-            
+
+            // Otherwise, go back to mining
             bankingState.addTransition("tick",
                 new ConditionDelegate[] { },
                 new ActionDelegate[] { }, miningState);
 
-            // FIXED: Using PascalCase to match your FSAImpl.SetCurrentState method
             SetCurrentState(miningState);
         }
 
         /// <summary>
-        /// This is a condition that tests to see if the miner is so thirsty that he cannot dig
+        /// Option A: preemptive hydration.
+        /// Trigger drinking before the hard stop at 15.
         /// </summary>
         private Boolean parched(FSA fsa)
         {
-            if (thirst >= 15)
+            if (thirst >= 12)
             {
-                Console.WriteLine("Too thirsty too work.");
+                Console.WriteLine("Getting thirsty, time to drink.");
             }
-            return thirst >= 15;
+            return thirst >= 12;
         }
 
         /// <summary>
-        /// An action that decrements the miner's thirst ...
+        /// Drink reduces thirst by 1 per tick.
         /// </summary>
         private void takeDrink(FSA fsa)
         {
@@ -89,7 +105,7 @@ namespace Miner49er
         }
 
         /// <summary>
-        /// An action that decrements the gold in the miner's pockets and increments the gold in the bank ...
+        /// Deposit moves 1 nugget from pockets to bank per tick.
         /// </summary>
         private void depositGold(FSA fsa)
         {
@@ -99,15 +115,16 @@ namespace Miner49er
         }
 
         /// <summary>
-        /// This implements the Miner.getCurrentWealth() call ...
+        /// Total wealth is bank + pockets.
         /// </summary>
         public int getCurrentWealth()
         {
             return bank + gold;
         }
 
-        // --- Previously extracted methods ---
-
+        /// <summary>
+        /// Digging earns gold but increases thirst.
+        /// </summary>
         private void dig(FSA fsa)
         {
             gold++;
@@ -115,20 +132,13 @@ namespace Miner49er
             Console.WriteLine("Miner is digging.");
         }
 
-        private void incrementThirst(FSA fsa)
-        {
-            thirst++;
-        }
-
         private Boolean pocketsFull(FSA fsa) => gold >= 5;
-
         private Boolean pocketsNotEmpty(FSA fsa) => gold > 0;
-
         private Boolean thirsty(FSA fsa) => thirst > 0;
 
         public void printStatus()
         {
-            Console.WriteLine("Thirst: "+thirst+" Gold: "+gold+" Bank: "+bank);
+            Console.WriteLine("Thirst: " + thirst + " Gold: " + gold + " Bank: " + bank);
         }
     }
 }
